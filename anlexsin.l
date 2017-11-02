@@ -102,6 +102,7 @@ ptr_Token aux=(Token*)malloc(sizeof(Token));
 		printf("(%d,%.1f)\n",aux->clase,aux->valor);
 		aux=aux->sig;		
 	}
+	printf("(%d,%.1f)\n",aux->clase,aux->valor);
 }
 void print(Clase *inicio){
      ptr_Clase aux;
@@ -128,9 +129,50 @@ Clase *addtcons(ptr_Clase final,char *b){
 }
 
 /*Función para imprimir tokens*/
-/*char ffoken(float valor){
-	
-}*/
+char ftoken1(float valor){
+	if (valor==1) return 't';
+	else if (valor==2) return 'w';
+	else if (valor==3) return 'h';
+	else if (valor==4) return 'l';
+	else if (valor==5) return 'm';
+	else if (valor==6) return 'r';
+	else if (valor==7) return 'i';
+	else if (valor==8) return 'e';
+}
+
+char ftoken3(float valor){
+	if (valor==1) return '>';
+	else if (valor==2) return 'g';
+	else if (valor==3) return '<';
+	else if (valor==4) return 'p';
+	else if (valor==5) return 'q';
+	else if (valor==6){
+	return '!';
+	}
+}
+
+char ftoken4(float valor){
+	if (valor==1) return '/';
+	else if (valor==2) return '+';
+	else if (valor==3) return '-';
+	else if (valor==4) return '*';
+}
+
+
+/*Función para buscar tokens*/
+/*Se da de argumento la lista en la que está el elemento para identificar su token,
+esta función se utiliza para meter a la lista de tokens a los elementos de las tablas estáticas*/
+float searchTok(Clase *inicio, char *buscado){
+     ptr_Clase aux;
+     aux=(Clase*)malloc(sizeof(Clase));
+     aux=inicio->sig;
+	     while(aux!=NULL){
+	     	if (strcmp(buscado,aux->componente)==0) return aux->valor;
+		else aux=aux->sig;
+	     }
+	 return 0;
+}
+
 %}
 iden [a-z]+
 palRes (ENT|ESCRIBE|HAZ|LEE|MIENTRAS|REAL|SI|SINO)
@@ -155,26 +197,28 @@ com $$(.*)
 }
 {palRes} {
 		//printf("%s es una palabra reservada (clase 1)\n",yytext);
-	  	fntok=creaToken(fi[1]->clas,fi[1]->valor,fntok);
+	  	fntok=creaToken(fi[1]->clas,searchTok(in[1],yytext),fntok);
+           	fprintf(archlex,"%c",ftoken1(searchTok(in[1],yytext)));
 }
 {opAsig} {
 		//printf("%s es un operador de asignación (clase 2)\n",yytext);
 		  fntok=creaToken(fi[2]->clas,fi[2]->valor,fntok);
-         	  fprintf(archlex,"%c",(char)fi[2]->valor);
+       	  	  fprintf(archlex,"%c",(char)fi[2]->valor);
 }
 {opRel} {
 		//printf("%s es un operador relacional (clase 3)\n",yytext);
-		  fntok=creaToken(fi[3]->clas,fi[3]->valor,fntok);
-
+		  fntok=creaToken(fi[3]->clas,searchTok(in[3],yytext),fntok);
+           	  fprintf(archlex,"%c",ftoken3(searchTok(in[3],yytext)));
 }
 {opArit} {
 		//printf("%s es un operador aritmético (clase 4)\n",yytext);
 			fntok=creaToken(fi[4]->clas,fi[4]->valor,fntok);
+	           	fprintf(archlex,"%c",ftoken4(searchTok(in[4],yytext)));
 }	
 {simEsp} {
 		//printf("%s es un símbolo especial (clase 5)\n",yytext);
-			fntok=creaToken(fi[5]->clas,fi[5]->valor,fntok);
-         	  	fprintf(archlex,"%c",(char)fi[5]->valor);
+			fntok=creaToken(fi[5]->clas,(float)*yytext,fntok);
+         	  	fprintf(archlex,"%c",(char)*yytext);
 }
 {consEnt} {
 		//printf("%s es una constante entera (clase 6)\n",yytext);
@@ -220,6 +264,7 @@ int main(int argc, char *argv[]){
 	fi[1]=addt(fi[1],"ESCRIBE");
 	fi[1]=addt(fi[1],"HAZ");
 	fi[1]=addt(fi[1],"LEE");
+	fi[1]=addt(fi[1],"MIENTRAS");
 	fi[1]=addt(fi[1],"REAL");
 	fi[1]=addt(fi[1],"SI");
 	fi[1]=addt(fi[1],"SINO");
@@ -244,6 +289,7 @@ int main(int argc, char *argv[]){
 	fi[5]=addt(fi[5],")");
 	fi[5]=addt(fi[5],";");
 	fi[5]=addt(fi[5],",");
+	fi[5]=addt(fi[5],"@");
 
 	yyin=fopen(argv[1],"r");
 		yylex();
@@ -252,5 +298,11 @@ int main(int argc, char *argv[]){
 		print(in[i]);
 		}	
 	printTok(intok);
+/*Cambios realizados durante la realización del segundo programa
+*Se agrego la impresión de átomos
+*Se agregó el símbolo especial '@'
+*Se creó una nueva función searchTok()
+*Se crearon las funciones ftoken para imprimir los átomos
+*/
 
 }
